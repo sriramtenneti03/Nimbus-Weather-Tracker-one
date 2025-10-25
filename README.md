@@ -24,21 +24,7 @@ This application provides **real-time weather data**, **hourly forecasts**, and 
 
 ---
 
-## 🛠️ Tech Stack & Architecture
 
-This project showcases **modern Angular development practices** with a focus on performance, scalability, and developer experience.
-
-| Category | Technology / Feature |
-|-----------|----------------------|
-| **Framework** | Angular (v20+) |
-| **Architecture** | Standalone Components (no NgModules) |
-| **State Management** | Angular **Signals** for fine-grained reactivity |
-| **Change Detection** | **Zoneless** for maximum runtime efficiency |
-| **Styling** | Tailwind CSS (utility-first responsive design) |
-| **Async Ops** | RxJS (for streams, debounced search, etc.) |
-| **PWA** | Angular Service Worker |
-
----
 
 ## 🚀 Getting Started
 

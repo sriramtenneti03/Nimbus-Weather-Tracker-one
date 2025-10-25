@@ -1,0 +1,7 @@
+{
+  "name": "Weather & Air Quality Dashboard",
+  "description": "A responsive dashboard to view real-time weather and air quality information for any city, with features like autocomplete search, hourly forecasts, and favorites.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

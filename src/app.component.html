@@ -1,0 +1,151 @@
+<div [class]="'min-h-screen w-full bg-gradient-to-br p-4 sm:p-6 lg:p-8 transition-colors duration-500 ' + getWeatherBackgroundClass()">
+  <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Left Column: Search and Favorites -->
+    <aside class="lg:col-span-1 space-y-8">
+      <!-- Search Bar -->
+      <div class="relative">
+        <div class="relative">
+            <input 
+            id="citySearch"
+            type="text" 
+            placeholder="Search for a city..."
+            (input)="onSearch($event)"
+            class="w-full pl-10 pr-4 py-3 bg-white/10 rounded-lg backdrop-blur-sm focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400"
+            />
+            <svg class="w-6 h-6 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        @if (searchResults().length > 0) {
+          <ul class="absolute z-10 w-full mt-2 bg-gray-800/80 backdrop-blur-md rounded-lg shadow-lg overflow-hidden">
+            @for(city of searchResults(); track city.lat + city.lon) {
+              <li (click)="selectCity(city)" class="px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
+                {{ getCityDisplayName(city) }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- Favorites -->
+      <div class="p-6 bg-white/10 rounded-lg backdrop-blur-sm">
+        <h2 class="text-xl font-semibold mb-4">Favorites</h2>
+        @if (favorites().length > 0) {
+          <ul class="space-y-3">
+            @for (fav of favorites(); track fav.lat + fav.lon) {
+              <li (click)="selectFavorite(fav)" class="flex justify-between items-center p-3 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+                <span>{{ fav.name }}, {{ fav.country }}</span>
+                <button (click)="removeFavorite($event, fav)" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="text-gray-400">Your favorite cities will appear here.</p>
+        }
+      </div>
+    </aside>
+
+    <!-- Right Column: Weather Details -->
+    <div class="lg:col-span-2 space-y-8">
+      @if (loading()) {
+        <div class="flex items-center justify-center h-96">
+            <svg class="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+      }
+      @if (error()) {
+        <div class="p-6 bg-red-500/30 rounded-lg text-center">
+            <h3 class="text-lg font-semibold">Error</h3>
+            <p>{{ error() }}</p>
+        </div>
+      }
+      @if (weatherData(); as data) {
+        <!-- Current Weather -->
+        <div class="p-6 bg-white/10 rounded-lg backdrop-blur-sm">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold">{{ data.weather.name }}, {{ data.weather.sys.country }}</h1>
+                    <p class="text-gray-300">{{ data.weather.dt * 1000 | date:'EEEE, MMMM d' }}</p>
+                </div>
+                <button (click)="toggleFavorite()" [class]="'p-2 rounded-full ' + (isFavorite() ? 'text-yellow-400 bg-white/20' : 'text-gray-300 hover:bg-white/10')">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                </button>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center justify-between mt-6">
+                <div class="flex items-center">
+                    <img [src]="'https://openweathermap.org/img/wn/' + data.weather.weather[0].icon + '@4x.png'" alt="Weather icon" class="w-28 h-28 -ml-4">
+                    <div class="text-6xl font-bold ml-2">{{ data.weather.main.temp | tempConverter:temperatureUnit() | number:'1.0-0' }}</div>
+                    <div class="text-2xl mt-2">
+                        <button (click)="toggleUnit()" [class]="temperatureUnit() === 'C' ? 'font-bold' : 'text-gray-400'">°C</button>
+                        <span class="text-gray-400 mx-1">/</span>
+                        <button (click)="toggleUnit()" [class]="temperatureUnit() === 'F' ? 'font-bold' : 'text-gray-400'">°F</button>
+                    </div>
+                </div>
+                <div class="text-center sm:text-right mt-4 sm:mt-0">
+                    <p class="text-xl capitalize">{{ data.weather.weather[0].description }}</p>
+                    <p class="text-gray-300">Feels like {{ data.weather.main.feels_like | tempConverter:temperatureUnit() | number:'1.0-0' }}°</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8 text-center">
+                <div class="p-3 bg-white/5 rounded-lg">
+                    <p class="text-sm text-gray-400">Humidity</p>
+                    <p class="text-lg font-semibold">{{ data.weather.main.humidity }}%</p>
+                </div>
+                <div class="p-3 bg-white/5 rounded-lg">
+                    <p class="text-sm text-gray-400">Wind Speed</p>
+                    <div class="flex items-baseline justify-center space-x-1">
+                        <p class="text-lg font-semibold">{{ data.weather.wind.speed | speedConverter:windSpeedUnit() | number:'1.0-1' }}</p>
+                        <div class="text-xs">
+                            <button (click)="toggleWindSpeedUnit()" [class]="windSpeedUnit() === 'm/s' ? 'font-bold' : 'text-gray-400'">m/s</button>
+                            <span class="text-gray-400 mx-px">/</span>
+                            <button (click)="toggleWindSpeedUnit()" [class]="windSpeedUnit() === 'km/h' ? 'font-bold' : 'text-gray-400'">km/h</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 bg-white/5 rounded-lg col-span-2 sm:col-span-1">
+                    <p class="text-sm text-gray-400">Pressure</p>
+                    <p class="text-lg font-semibold">{{ data.weather.main.pressure }} hPa</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Forecast -->
+        <div class="p-6 bg-white/10 rounded-lg backdrop-blur-sm">
+            <h2 class="text-xl font-semibold mb-4">Hourly Forecast</h2>
+            <div class="flex overflow-x-auto space-x-4 pb-2">
+                @for(hour of data.forecast.list; track hour.dt) {
+                    <div class="flex-shrink-0 w-24 text-center p-3 bg-white/5 rounded-lg">
+                        <p class="text-sm text-gray-300">{{ hour.dt * 1000 | date:'shortTime' }}</p>
+                        <img [src]="'https://openweathermap.org/img/wn/' + hour.weather[0].icon + '@2x.png'" alt="Weather icon" class="w-16 h-16 mx-auto">
+                        <p class="font-semibold text-lg">{{ hour.main.temp | tempConverter:temperatureUnit() | number:'1.0-0' }}°</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Air Quality -->
+        @if (data.airQuality.list[0]; as aqiData) {
+            <div class="p-6 bg-white/10 rounded-lg backdrop-blur-sm">
+                <h2 class="text-xl font-semibold mb-4">Air Quality</h2>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p [class]="'text-2xl font-bold ' + getAirQualityText(aqiData.main.aqi).color">{{ getAirQualityText(aqiData.main.aqi).text }}</p>
+                        <p class="text-gray-300">AQI: {{ aqiData.main.aqi }}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                        <span>CO: {{ aqiData.components.co | number:'1.0-1' }}</span>
+                        <span>NO₂: {{ aqiData.components.no2 | number:'1.0-1' }}</span>
+                        <span>O₃: {{ aqiData.components.o3 | number:'1.0-1' }}</span>
+                        <span>SO₂: {{ aqiData.components.so2 | number:'1.0-1' }}</span>
+                    </div>
+                </div>
+            </div>
+        }
+      }
+    </div>
+  </main>
+</div>
